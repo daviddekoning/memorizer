@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+import sys
+import termios
+import tty
+import random
+
+def get_key():
+    """Get a single keypress from the user without requiring Enter."""
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setraw(sys.stdin.fileno())
+        ch = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    return ch
+
+def clear_screen():
+    """Clear the terminal screen."""
+    print("\033[H\033[J", end="")
+
+def main():
+    # Get the text from the user
+    print("Enter the text you want to blank out (press Enter when done):")
+    user_text = input()
+    
+    # Split the text into words
+    words = user_text.split()
+    if not words:
+        print("No text entered. Exiting.")
+        return
+    
+    # Create a list to track which words have been blanked out
+    blanked_indices = []
+    available_indices = list(range(len(words)))
+    
+    print("\nPress SPACE to blank out another word. Press 'q' to quit.\n")
+    print(user_text)
+    
+    while available_indices:
+        key = get_key()
+        
+        if key == ' ':  # Space key
+            # Choose a random word to blank out
+            index_to_blank = random.choice(available_indices)
+            available_indices.remove(index_to_blank)
+            blanked_indices.append(index_to_blank)
+            
+            # Create a new display with the chosen word blanked out
+            clear_screen()
+            print("Press SPACE to blank out another word. Press 'q' to quit.\n")
+            
+            # Display the text with blanked words
+            display_text = words.copy()
+            for i in blanked_indices:
+                word_length = len(words[i])
+                display_text[i] = "_" * word_length
+            
+            print(" ".join(display_text))
+            
+        elif key.lower() == 'q':
+            print("\nExiting program.")
+            break
+    
+    if not available_indices:
+        print("\nAll words have been blanked out!")
+
+if __name__ == "__main__":
+    main()

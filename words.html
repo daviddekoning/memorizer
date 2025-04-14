@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Disappearing Text Memorizer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        #game-container {
+            display: none;
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        #start-container {
+            text-align: center;
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .status {
+            background-color: #f1f8ff;
+            padding: 10px;
+            border-left: 4px solid #3498db;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+        
+        .instructions {
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .text-display {
+            font-family: 'Courier New', Courier, monospace; /* Fixed-width font */
+            font-size: 18px;
+            line-height: 1.6;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 4px;
+            min-height: 100px;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .key-hint {
+            text-align: center;
+            margin-top: 20px;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>The Disappearing Text Memorizer</h1>
+    
+    <div id="start-container">
+        <h2>Enter your text</h2>
+        <p>Type or paste the text you want to memorize. Words will disappear one by one to help you practice.</p>
+        <textarea id="input-text" placeholder="Enter your text here..."></textarea>
+        <button id="start-button">Start Memorizing</button>
+    </div>
+    
+    <div id="game-container">
+        <div class="instructions">
+            <h3>Instructions</h3>
+            <ul>
+                <li>Press the <strong>Blank Word</strong> button to hide a random word</li>
+                <li>Press the <strong>Reveal Last Word</strong> button to show the last hidden word (can only use once per blank)</li>
+                <li>Keyboard shortcuts: <kbd>Space</kbd> to blank, <kbd>B</kbd> to reveal, <kbd>R</kbd> to restart</li>
+            </ul>
+        </div>
+        
+        <div class="status" id="status-message">
+            All words are visible. Press "Blank Word" to begin.
+        </div>
+        
+        <div class="text-display" id="text-display"></div>
+        
+        <div class="controls">
+            <button id="blank-button">Blank Word (Space)</button>
+            <button id="reveal-button">Reveal Last Word (B)</button>
+            <button id="restart-button">Restart (R)</button>
+        </div>
+        
+        <div class="key-hint">
+            Tip: You can also use keyboard shortcuts while focused on this page.
+        </div>
+    </div>
+    
+    <footer>
+        The Disappearing Text Memorizer - A learning tool to help with memorization
+    </footer>
+    
+    <script>
+        class TextMemorizerGame {
+            constructor() {
+                // Game elements
+                this.startContainer = document.getElementById('start-container');
+                this.gameContainer = document.getElementById('game-container');
+                this.inputText = document.getElementById('input-text');
+                this.textDisplay = document.getElementById('text-display');
+                this.statusMessage = document.getElementById('status-message');
+                this.startButton = document.getElementById('start-button');
+                this.blankButton = document.getElementById('blank-button');
+                this.revealButton = document.getElementById('reveal-button');
+                this.restartButton = document.getElementById('restart-button');
+                
+                // Game state
+                this.words = [];
+                this.blankedIndices = [];
+                this.availableIndices = [];
+                this.lastRecovered = null;
+                this.canRecover = true;
+                this.gameActive = false;
+                
+                // Bind event handlers
+                this.startButton.addEventListener('click', () => this.startGame());
+                this.blankButton.addEventListener('click', () => this.blankWord());
+                this.revealButton.addEventListener('click', () => this.recoverWord());
+                this.restartButton.addEventListener('click', () => this.restartGame());
+                
+                // Add keyboard controls with proper event handling
+                document.addEventListener('keydown', (e) => this.handleKeyPress(e));
+                
+                // Focus the input field on load
+                this.inputText.focus();
+            }
+            
+            startGame() {
+                const text = this.inputText.value.trim();
+                if (!text) {
+                    alert('Please enter some text before starting.');
+                    return;
+                }
+                
+                // Initialize game state
+                this.words = text.split(/\s+/);
+                this.blankedIndices = [];
+                this.availableIndices = Array.from(Array(this.words.length).keys());
+                this.lastRecovered = null;
+                this.canRecover = true;
+                
+                // Switch to game view
+                this.startContainer.style.display = 'none';
+                this.gameContainer.style.display = 'block';
+                
+                // Set game as active (for keyboard shortcuts)
+                this.gameActive = true;
+                
+                // Display initial text
+                this.updateDisplay();
+            }
+            
+            restartGame() {
+                this.gameActive = false;
+                this.startContainer.style.display = 'block';
+                this.gameContainer.style.display = 'none';
+                this.inputText.focus();
+            }
+            
+            blankWord() {
+                if (!this.availableIndices.length) {
+                    return false;
+                }
+                
+                // Determine which word to blank
+                let indexToBlank;
+                if (this.lastRecovered !== null) {
+                    indexToBlank = this.lastRecovered;
+                    this.lastRecovered = null;
+                } else {
+                    const randomIndex = Math.floor(Math.random() * this.availableIndices.length);
+                    indexToBlank = this.availableIndices[randomIndex];
+                }
+                
+                // Update game state
+                this.availableIndices = this.availableIndices.filter(idx => idx !== indexToBlank);
+                this.blankedIndices.push(indexToBlank);
+                this.canRecover = true;
+                
+                this.updateDisplay();
+                return true;
+            }
+            
+            recoverWord() {
+                if (!this.blankedIndices.length || !this.canRecover) {
+                    return false;
+                }
+                
+                // Recover most recent word
+                const lastBlanked = this.blankedIndices.pop();
+                this.availableIndices.push(lastBlanked);
+                this.lastRecovered = lastBlanked;
+                this.canRecover = false;
+                
+                this.updateDisplay();
+                return true;
+            }
+            
+            updateDisplay() {
+                // Create display text with blanked words
+                const displayText = [...this.words];
+                for (const index of this.blankedIndices) {
+                    // Replace with spaces matching the word length
+                    displayText[index] = ' '.repeat(displayText[index].length);
+                }
+                
+                // Update the text display
+                this.textDisplay.textContent = displayText.join(' ');
+                
+                // Update status message
+                this.updateStatusMessage();
+                
+                // Update button states
+                this.updateButtonStates();
+            }
+            
+            updateStatusMessage() {
+                if (!this.blankedIndices.length) {
+                    this.statusMessage.textContent = 'All words are visible. Press "Blank Word" to begin.';
+                } else if (!this.availableIndices.length) {
+                    if (this.canRecover) {
+                        this.statusMessage.textContent = 'All words are blanked! You can reveal the last word.';
+                    } else {
+                        this.statusMessage.textContent = 'All words are blanked!';
+                    }
+                } else if (!this.canRecover) {
+                    this.statusMessage.textContent = 'You\'ve already used reveal. Blank another word to use it again.';
+                } else {
+                    this.statusMessage.textContent = 
+                        `${this.blankedIndices.length} word(s) blanked, ${this.availableIndices.length} word(s) remaining.`;
+                }
+            }
+            
+            updateButtonStates() {
+                this.blankButton.disabled = !this.availableIndices.length;
+                this.revealButton.disabled = !this.blankedIndices.length || !this.canRecover;
+            }
+            
+            handleKeyPress(event) {
+                // Only process keys when in game mode and not in an input element
+                if (!this.gameActive || 
+                    event.target.tagName === 'INPUT' || 
+                    event.target.tagName === 'TEXTAREA') {
+                    return;
+                }
+                
+                switch (event.key.toLowerCase()) {
+                    case ' ':  // Space
+                        event.preventDefault();
+                        this.blankWord();
+                        break;
+                    case 'b':  // B key
+                        event.preventDefault();
+                        this.recoverWord();
+                        break;
+                    case 'r':  // R key
+                        event.preventDefault();
+                        this.restartGame();
+                        break;
+                }
+            }
+        }
+        
+        // Initialize the game when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            const game = new TextMemorizerGame();
+        });
+    </script>
+</body>
+</html>
+
