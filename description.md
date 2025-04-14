@@ -18,6 +18,7 @@ We have an HTML-based text memorization tool called "The Disappearing Text Memor
    - Status messages that explain the current state of the game
    - Disabled buttons when actions aren't available
    - Keyboard shortcuts (Space, B, R) that only work after starting the game (not during text input)
+   - The game screen puts the sole focus on the text to memorize, and removes or minimizes all other text and UI elements, including the title.
 
 5. Current implementation already includes:
    - Proper event handling to prevent keyboard shortcuts from interfering with text input
