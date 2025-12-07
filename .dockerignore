@@ -1,0 +1,50 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info
+dist/
+build/
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+*.log
+/staticfiles/
+
+# Environment
+.env
+.venv
+env/
+venv/
+
+# IDE
+.vscode
+.idea
+*.swp
+
+# Node modules (will be installed in Docker)
+node_modules/
+
+# Build artifacts
+frontend/dist/
+frontend/build/
+
+# OS
+.DS_Store
+
+# Data
+/data/
+
+# Documentation
+*.md
+!README.md
+
+# CI/CD
+.github/
