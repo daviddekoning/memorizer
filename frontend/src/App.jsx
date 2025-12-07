@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import AddVerse from './pages/AddVerse';
+import VerseDetail from './pages/VerseDetail';
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -43,6 +44,16 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/verses/:id"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <VerseDetail />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
@@ -59,4 +70,3 @@ function App() {
 }
 
 export default App;
-
