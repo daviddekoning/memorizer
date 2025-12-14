@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.google',  # Google OAuth provider for social authentication
     'dj_rest_auth',
     # Local apps
     'core',
@@ -144,6 +144,9 @@ REST_FRAMEWORK = {
 }
 
 # Django Allauth configuration
+# Two backends are needed:
+# 1. ModelBackend - for Django admin/superuser access
+# 2. AuthenticationBackend - for Google OAuth social authentication
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
